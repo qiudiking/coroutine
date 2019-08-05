@@ -1,0 +1,9 @@
+.idea
+composer.lock
+*.log
+/apidoc
+/application
+/bin
+/config
+/public
+apidoc.json
