@@ -1,5 +1,5 @@
 {
-    "name": "scar/coroutine-db",
+    "name": "scar/coroutine",
     "description": "db",
     "license": "MIT",
     "type": "library",
