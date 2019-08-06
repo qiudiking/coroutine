@@ -180,7 +180,7 @@ class WebSocket
 			}
 		}catch(\Throwable $t){
 			\SeasLog::error( $t->getMessage().PHP_EOL.$t->getTraceAsString() );
-			$result = print_r($t,true);
+			$result = print_r($t->getMessage().PHP_EOL.$t->getTraceAsString(),true);
 			if($psrResponse instanceof Response){
 				if($psrResponse->getStatusCode() === 200){
 					$psrResponse = $psrResponse->withStatus(500);
