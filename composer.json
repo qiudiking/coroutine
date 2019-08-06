@@ -1,6 +1,6 @@
 {
     "name": "scar/coroutine",
-    "description": "db",
+    "description": "基于swoole开发出来的PHP高性能框架,支持协程",
     "license": "MIT",
     "type": "library",
     "minimum-stability": "dev",
