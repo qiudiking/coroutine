@@ -293,6 +293,7 @@ class Router
 
 
 
+
 			$equal = strpos($typeStr,'=');
 			if( $equal  !== false  ){
 				if($type ==='Number'||$type === 'String' ){
