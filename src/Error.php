@@ -56,13 +56,13 @@ class Error
     public static function appError($errno, $errstr, $errfile = '', $errline = 0)
     {
     	echo "错误处理\n";
-		print_r( $errno );
+		print_r( '错误编号: '.$errno );
 		echo "\n";
-	    print_r( $errstr );
+	    print_r( '详细错误信息: '.$errstr );
 	    echo "\n";
-	    print_r( $errfile );
+	    print_r( '出错的文件: '.$errfile );
 	    echo "\n";
-	    print_r( $errline );
+	    print_r( '出错行号: '.$errline );
 	    echo "\n";
     }
 

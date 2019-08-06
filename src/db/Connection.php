@@ -449,7 +449,8 @@ abstract class Connection
             $this->bind = $bind;
         }
 
-        Coroutine::getContext()[Db::$executeTimes]++;
+        isset( Coroutine::getContext()[Db::$executeTimes])?Coroutine::getContext()[Db::$executeTimes]++
+	        :Coroutine::getContext()[Db::$executeTimes]=1;
         try {
             // 调试开始
             //$this->debug(true);
