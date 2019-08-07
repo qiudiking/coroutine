@@ -555,8 +555,8 @@ abstract class Connection
 	    if( strpos($sql,':') ){
 		    foreach ($bind as $key => $value){
 			    $length = strpos($sql,':');
-			    $str = substr($sql,$length+1,strlen($key));
-			     if($str  != $key ) throw new MysqlException('bind params error',332211);
+			    $str = substr($sql,$length+1,mb_strlen($key));
+			     if($str  != $key ) throw new MysqlException('sql bind params error',332211);
 			    $sql = str_replace(':'.$key,'?',$sql);
 			    $bind2[] = is_array($value) ? $value[0] : $value;
 		    }
