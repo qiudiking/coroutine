@@ -196,8 +196,6 @@ class App
 	 */
 	public static function  onRequestInit( Request $request, Response $response )
 	{
-		$class = self::$listenerScar.'\\RequestEvent';
-		self::triggerEvent( $class,$request,$response );
 		self::triggerEvent( self::$listenerSwoole.'\\Request',$request,$response );
 		Db::recycle();
 	}
@@ -236,6 +234,7 @@ class App
 				$instance = self::$event[$class];
 			}else{
 				$instance = new $class;
+				self::$event[$class] = $instance;
 			}
 			method_exists($instance,App::$listenerMethod) &&
 			call_user_func_array(array($instance,App::$listenerMethod),$params);

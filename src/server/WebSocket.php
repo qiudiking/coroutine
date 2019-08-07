@@ -165,9 +165,9 @@ class WebSocket
 	public function onRequest(\Swoole\Http\Request $request ,\swoole_http_response $response)
 	{
 		try{
+			App::onRequestInit( $request,$response );
 			$psrRequest  = PsrRequest::new( $request );
 			$psrResponse = PsrResponse::new( $response );
-			App::onRequestInit( $request,$response );
 			Router::dispatch( $psrRequest, $psrResponse );
 		}catch ( OperationException $o ){
 			$result = Result::instance();
