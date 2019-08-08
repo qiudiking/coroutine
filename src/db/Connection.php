@@ -291,7 +291,7 @@ abstract class Connection
 				    $this->links[$linkNum] = $mysql;
 				    if ($config['debug']) {
 					    // 记录数据库连接信息
-					    //Log::record('[ DB ] CONNECT:[ UseTime:' . number_format(microtime(true) - $startTime, 6) . 's ] ' . $config['dsn'], 'sql');
+					    \SeasLog::info('[ DB ] CONNECT:[ UseTime:' . number_format(microtime(true) - $startTime, 6) . 's ] ' . $config['dsn']);
 				    }
 			    } catch (MysqlException $e) {
 				    if ($autoConnection) {
@@ -361,7 +361,7 @@ abstract class Connection
 			Coroutine::getContext()[Db::$queryTimes]++:Coroutine::getContext()[Db::$queryTimes] = 1;
         try {
             // 调试开始
-            $this->debug(true);
+            //$this->debug(true);
 
             // 释放前次的查询结果
             if (!empty($this->Statement)) {
@@ -403,7 +403,7 @@ abstract class Connection
 
 
             // 调试结束
-            $this->debug(false, '', $master);
+            //$this->debug(false, '', $master);
             // 返回结果集
             return $this->getResult($pdo,$procedure);
         } catch (MysqlException $e) {
