@@ -187,7 +187,9 @@ class App
 	public function setLogPath()
 	{
 		if( extension_loaded('SeasLog') ){
-			\SeasLog::setBasePath( self::$logPath );
+			$logPath = Config::get('log.path');
+			$logPath || $logPath = self::$logPath;
+			\SeasLog::setBasePath( $logPath );
 		}
 	}
 
