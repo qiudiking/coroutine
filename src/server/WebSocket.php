@@ -203,6 +203,7 @@ class WebSocket
 		$setData = $config['http']['set'];
 		$setData['pid_file'] = App::$webSocket_pid_file;
 		App::$daemonize && $setData['daemonize'] = 1;
+		$setData['reload_async'] = true;
 	    $this->server = new  \swoole_websocket_server($config['http']['bind']['host'],$config['http']['bind']['port']);
 	    Container::getInstance()->set( $this->server );
 	    $this->server->set( $setData );
