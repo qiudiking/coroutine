@@ -12,17 +12,19 @@
 namespace Scar;
 
 
+use Swoole\Coroutine;
+
 class Debug
 {
     /**
      * @var array 区间时间信息
      */
-    protected static $info = [];
+    protected static $info = self::class.'info';
 
     /**
      * @var array 区间内存信息
      */
-    protected static $mem = [];
+    protected static $mem = self::class.'mem';
 
     /**
      * 记录时间（微秒）和内存使用情况
@@ -33,11 +35,11 @@ class Debug
      */
     public static function remark($name, $value = '')
     {
-        self::$info[$name] = is_float($value) ? $value : microtime(true);
+	    Coroutine::getContext()[self::$info][$name] = is_float($value) ? $value : microtime(true);
 
         if ('time' != $value) {
-            self::$mem['mem'][$name]  = is_float($value) ? $value : memory_get_usage();
-            self::$mem['peak'][$name] = memory_get_peak_usage();
+            Coroutine::getContext()[self::$mem]['mem'][$name]  = is_float($value) ? $value : memory_get_usage();
+	        Coroutine::getContext()[self::$mem]['peak'][$name] = memory_get_peak_usage();
         }
     }
 
@@ -51,11 +53,11 @@ class Debug
      */
     public static function getRangeTime($start, $end, $dec = 6)
     {
-        if (!isset(self::$info[$end])) {
-            self::$info[$end] = microtime(true);
+        if (!isset(Coroutine::getContext()[self::$info][$end])) {
+	        Coroutine::getContext()[self::$info][$end] = microtime(true);
         }
 
-        return number_format((self::$info[$end] - self::$info[$start]), $dec);
+        return number_format((Coroutine::getContext()[self::$info][$end] - Coroutine::getContext()[self::$info][$start]), $dec);
     }
 
 

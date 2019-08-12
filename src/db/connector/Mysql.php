@@ -111,8 +111,7 @@ class Mysql extends Connection
 	 */
     protected function getExplain($sql)
     {
-        $pdo    = $this->linkID->query("EXPLAIN " . $sql);
-        $result = $pdo->fetch();
+	    $result    = $this->linkID->query("EXPLAIN " . $sql);
         $result = array_change_key_case($result);
         if (isset($result['extra'])) {
             if (strpos($result['extra'], 'filesort') || strpos($result['extra'], 'temporary')) {

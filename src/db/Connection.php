@@ -56,7 +56,7 @@ abstract class Connection
 
 
     // 监听回调
-    protected static $event = 'Connection_event';
+    protected static $event = self::class.'event';
     // 使用Builder类
     protected $builder;
     // 数据库连接参数配置
@@ -353,9 +353,7 @@ abstract class Connection
 	    $this->disposeBindValue( $sql,$bind );
         // 记录SQL语句
         $this->queryStr = $sql;
-        if ($bind) {
-            $this->bind = $bind;
-        }
+	    $this->bind = $bind;
 		isset(Coroutine::getContext()[Db::$queryTimes])?
 			Coroutine::getContext()[Db::$queryTimes]++:Coroutine::getContext()[Db::$queryTimes] = 1;
         try {
@@ -396,14 +394,6 @@ abstract class Connection
 
             // 是否为存储过程调用
             $procedure = in_array(strtolower(substr(trim($sql), 0, 4)), ['call', 'exec']);
-            // 参数绑定
-	        /*if ($procedure) {
-				$this->bindParam($bind);
-			} else {
-				$this->bindValue($bind);
-			}*/
-            // 执行查询
-
 
             // 调试结束
             $this->debug(false, '', $master);
@@ -448,9 +438,7 @@ abstract class Connection
         $this->disposeBindValue( $sql,$bind );
 	    // 记录SQL语句
         $this->queryStr = $sql;
-        if ($bind) {
-            $this->bind = $bind;
-        }
+        $this->bind = $bind;
 
         isset( Coroutine::getContext()[Db::$executeTimes])?Coroutine::getContext()[Db::$executeTimes]++
 	        :Coroutine::getContext()[Db::$executeTimes]=1;
@@ -753,7 +741,6 @@ abstract class Connection
 
         if (1 == $this->transTimes) {
             $this->linkID->commit();
-	        $this->linkID->setDefer();
         }
 
         --$this->transTimes;
@@ -769,7 +756,6 @@ abstract class Connection
 
         if (1 == $this->transTimes) {
             $this->linkID->rollBack();
-            $this->linkID->setDefer();
         } elseif ($this->transTimes > 1 && $this->supportSavepoint()) {
             $this->linkID->query(
                 $this->parseSavepointRollBack('trans' . $this->transTimes)
@@ -1030,7 +1016,7 @@ abstract class Connection
      */
     protected function trigger($sql, $runtime, $explain = [], $master = false)
     {
-	    $event = Coroutine::getContext()[self::$event];
+	    $event = isset(Coroutine::getContext()[self::$event])?Coroutine::getContext()[self::$event]:[];
         if (!empty($event)) {
             foreach ($event as $callback) {
                 if (is_callable($callback)) {
@@ -1046,7 +1032,7 @@ abstract class Connection
                 $master = '';
             }
 
-	        \SeasLog::info('[ SQL ] ' . $sql . ' [ ' . $master . 'RunTime:' . $runtime . 's ]', 'sql');
+	        \SeasLog::info('[ SQL ] ' . $sql . ' [ ' . $master . 'RunTime:' . $runtime . 's ]');
             if (!empty($explain)) {
                 \SeasLog::info('[ EXPLAIN : ' . var_export($explain, true) . ' ]');
             }

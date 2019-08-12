@@ -49,7 +49,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
     // 当前类名称
     protected $class;
     // 回调事件
-    private static $event = 'Model_event';
+    private static $event = self::class.'event';
     // 错误信息
     protected $error;
     // 字段验证规则
@@ -115,13 +115,13 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
      *
      * @var array
      */
-    protected static $initialized = 'Model_initialized';
+    protected static $initialized = self::class.'initialized';
 
     /**
      * 是否从主库读取（主从分布式有效）
      * @var array
      */
-    protected static $readMaster = 'Model_readMaster';
+    protected static $readMaster = self::class.'readMaster';
 
     /**
      * 构造方法

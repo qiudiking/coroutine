@@ -20,22 +20,22 @@ class Cache
     /**
      * @var array 缓存的实例
      */
-    public static $instance = 'Cache_instance';
+    public static $instance = self::class.'instance';
 
     /**
      * @var int 缓存读取次数
      */
-    public static $readTimes = 'Cache_readTimes';
+    public static $readTimes = self::class.'readTimes';
 
     /**
      * @var int 缓存写入次数
      */
-    public static $writeTimes = 'Cache_writeTimes';
+    public static $writeTimes = self::class.'writeTimes';
 
     /**
      * @var object 操作句柄
      */
-    public static $handler = 'Cache_handler';
+    public static $handler = self::class.'handler';
 
     /**
      * 连接缓存驱动

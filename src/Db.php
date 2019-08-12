@@ -54,17 +54,17 @@ class Db
     /**
      * @var Connection[] 数据库连接实例
      */
-    public static $instance = 'Db_instance';
+    public static $instance = self::class.'instance';
 
     /**
      * @var int 查询次数
      */
-    public static $queryTimes = 'Db_queryTimes';
+    public static $queryTimes = self::class.'queryTimes';
 
     /**
      * @var int 执行次数
      */
-    public static $executeTimes = 'Db_executeTimes';
+    public static $executeTimes = self::class.'executeTimes';
 
     /**
      * 数据库初始化，并取得数据库类实例

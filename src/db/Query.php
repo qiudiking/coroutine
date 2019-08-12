@@ -54,11 +54,11 @@ class Query
     // 参数绑定
     protected $bind = [];
     // 数据表信息
-    protected static $info = 'Query_info';
+    protected static $info = self::class.'info';
     // 回调事件
-    private static $event = 'Query_event';
+    private static $event = self::class.'event';
     // 读取主库
-    private static $readMaster = 'Query_readMaster';
+    private static $readMaster = self::class.'readMaster';
 
     /**
      * 构造函数
