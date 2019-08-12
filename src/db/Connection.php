@@ -120,8 +120,6 @@ abstract class Connection
     // 绑定参数
     protected $bind = [];
 
-	//延迟接收结果
-    protected $defer = false;
 
     /**
      * 构造函数 读取数据库配置信息
@@ -307,7 +305,7 @@ abstract class Connection
 			    $this->links[$linkNum] = $mysql;
 		    }
     	}
-	    $this->links[$linkNum]->setDefer( $this->defer );
+	    $this->links[$linkNum]->setDefer( false  );
         return $this->links[$linkNum];
     }
 
@@ -378,6 +376,10 @@ abstract class Connection
 		            $this->Statement = $this->linkID->recv();
 		            if( false === $this->Statement ){
 			            throw new MysqlException($this->linkID->error,$this->linkID->errno);
+		            }
+		            $res = $this->Statement->execute( $bind );
+		            if($res === false ){
+			            throw new MysqlException( $this->linkID->error,$this->linkID->errno );
 		            }
 		            $res = $this->linkID->recv();
 		            if( $res === false ){

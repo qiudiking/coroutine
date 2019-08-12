@@ -12,6 +12,7 @@
 namespace Scar\db;
 
 use PDO;
+use Scar\db\exception\MysqlException;
 use Scar\Exception;
 
 abstract class Builder
@@ -96,7 +97,6 @@ abstract class Builder
             $fields = $options['field'];
         }
 
-
         $result = [];
         foreach ($data as $key => $val) {
             $item = $this->parseKey($key, $options, true);
@@ -109,7 +109,7 @@ abstract class Builder
             }
             if (false === strpos($key, '.') && !in_array($key, $fields, true)) {
                 if ($options['strict']) {
-                    throw new Exception('fields not exists:[' . $key . ']');
+                    throw new MysqlException('fields not exists:[' . $key . ']');
                 }
             } elseif (is_null($val)) {
                 $result[$item] = 'NULL';
@@ -122,7 +122,7 @@ abstract class Builder
                         $result[$item] = $item . '-' . floatval($val[1]);
                         break;
                     case 'exp':
-                        throw new Exception('not support data:[' . $val[0] . ']');
+                        throw new MysqlException('not support data:[' . $val[0] . ']');
                 }
             } elseif (is_scalar($val)) {
                 // 过滤非标量数据

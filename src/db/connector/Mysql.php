@@ -116,7 +116,7 @@ class Mysql extends Connection
         $result = array_change_key_case($result);
         if (isset($result['extra'])) {
             if (strpos($result['extra'], 'filesort') || strpos($result['extra'], 'temporary')) {
-                //Log::record('SQL:' . $this->queryStr . '[' . $result['extra'] . ']', 'warn');
+                \SeasLog::info('SQL:' . $this->queryStr . '[' . $result['extra'] . ']');
             }
         }
         return $result;

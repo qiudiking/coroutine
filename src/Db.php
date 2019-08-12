@@ -79,7 +79,7 @@ class Db
         if (false === $name) {
             $name = md5(serialize($config));
         }
-        if (true === $name || !isset( Coroutine::getContext()[self::$instance]) ) {
+        if (true === $name || !isset( Coroutine::getContext()[self::$instance][$name]) ) {
             // 解析连接参数 支持数组和字符串
             $options = self::parseConfig($config);
 
@@ -99,10 +99,9 @@ class Db
             if (true === $name) {
                 $name = md5(serialize($config));
             }
-            Coroutine::getContext()[self::$instance] = new $class($options);
-
+            Coroutine::getContext()[self::$instance][$name] = new $class($options);
         }
-        return Coroutine::getContext()[self::$instance];
+        return Coroutine::getContext()[self::$instance][$name];
     }
 
     /**
@@ -121,16 +120,17 @@ class Db
 	 */
     public static function recycle()
     {
-	    defer(function () {
-	    	if(isset(Coroutine::getContext()[self::$instance])){
-			    $link = Coroutine::getContext()[self::$instance]->getPdo();
-			    if( $link instanceof Coroutine\MySQL){
+	    if(isset(Coroutine::getContext()[self::$instance])){
+	    	$arr = Coroutine::getContext()[self::$instance];
+	    	foreach ( $arr as $item ){
+			    $link = $item->getPdo();
+			    if( $link instanceof Coroutine\MySQL ){
 				    $mysqlPool = Container::getInstance()->get( MysqlPool::class );
 				    $key = $link->serverInfo['host'].$link->serverInfo['database'];
 				    if( $link->connected )$mysqlPool->put($key, $link );
 			    }
-	    	}
-	    });
+		    }
+	    }
     }
 
     /**
@@ -144,7 +144,7 @@ class Db
         if (empty($config)) {
             $config = Config::get(null,App::$databases);
         } elseif (is_string($config) && false === strpos($config, '/')) {
-            //$config = Config::get($config); // 支持读取配置参数
+            $config = Config::get($config); // 支持读取配置参数
         }
 
         return is_string($config) ? self::parseDsn($config) : $config;

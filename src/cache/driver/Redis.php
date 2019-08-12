@@ -3,7 +3,10 @@
 
 namespace Scar\cache\driver;
 
+use Cake\Log\Log;
+use Scar\cache\CachePool;
 use Scar\cache\Driver;
+use Scar\Container;
 
 /**
  * Redis缓存驱动，适合单机部署、有前端代理实现高可用的场景，性能最好
@@ -18,11 +21,14 @@ class Redis extends Driver
         'host'       => '127.0.0.1',
         'port'       => 6379,
         'password'   => '',
-        'select'     => 0,
-        'timeout'    => 0,
-        'expire'     => 0,
+        'select'     => 0,//库序号
+        'expire'     => 0,//有效期
         'persistent' => false,
-        'prefix'     => '',
+        'prefix'     => '',//key前缀
+	    'connect_timeout'=>1,//连接超时时间
+	    'timeout'=>-1,//获取数据超时时间
+	    'serialize'=>false,//是否序列化
+	    'reconnect'=>1,//重连次数
     ];
 
     /**
@@ -32,26 +38,33 @@ class Redis extends Driver
      */
     public function __construct($options = [])
     {
-        if (!extension_loaded('redis')) {
-            throw new \BadFunctionCallException('not support: redis');
-        }
-        if (!empty($options)) {
-            $this->options = array_merge($this->options, $options);
-        }
-        $this->handler = new \Redis;
-        if ($this->options['persistent']) {
-            $this->handler->pconnect($this->options['host'], $this->options['port'], $this->options['timeout'], 'persistent_id_' . $this->options['select']);
-        } else {
-            $this->handler->connect($this->options['host'], $this->options['port'], $this->options['timeout']);
-        }
+	    if (!empty($options)) {
+		    $this->options = array_merge($this->options, $options);
+	    }
+	    $CachePool = Container::getInstance()->get(CachePool::class);
+	    $this->handler = $CachePool->get( $options['host'].$options['port'] );
+	    if( $this->handler === false ){
+		    $this->handler = new \Swoole\Coroutine\Redis();
+		    $this->handler->setOptions([
+			    'connect_timeout'=>$this->options['connect_timeout'],
+			    'timeout'=>$this->options['timeout'],
+			    'serialize'=>$this->options['serialize'],
+			    'reconnect'=>$this->options['reconnect'],
+		    ]);
 
-        if ('' != $this->options['password']) {
-            $this->handler->auth($this->options['password']);
-        }
+		    $res = $this->handler->connect($this->options['host'], $this->options['port']);
+		    if( $res === false ){
+			    throw new \RedisException( $this->handler->errMsg,$this->handler->errCode );
+		    }
+		    if ('' != $this->options['password']) {
+			    $authRes = $this->handler->auth($this->options['password']);
+			    if( $authRes === false )throw new \RedisException( $this->handler->errMsg,$this->handler->errCode );
+		    }
 
-        if (0 != $this->options['select']) {
-            $this->handler->select($this->options['select']);
-        }
+		    if (0 != $this->options['select']) {
+			    $this->handler->select($this->options['select']);
+		    }
+	    }
     }
 
     /**
@@ -62,7 +75,11 @@ class Redis extends Driver
      */
     public function has($name)
     {
-        return $this->handler->get($this->getCacheKey($name)) ? true : false;
+	    $result = $this->handler->get($this->getCacheKey($name));
+    	if( $this->handler->getDefer() ){
+		    $result = $this->handler->recv();
+    	}
+        return  $result ? true : false;
     }
 
     /**

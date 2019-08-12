@@ -1950,7 +1950,6 @@ class Query
     public function getFieldsBind($table = '')
     {
         $types = $this->getFieldsType($table);
-
         $bind  = [];
         if ($types) {
             foreach ($types as $key => $type) {

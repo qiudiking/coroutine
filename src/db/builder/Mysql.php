@@ -12,6 +12,7 @@
 namespace Scar\db\builder;
 
 use Scar\db\Builder;
+use Scar\db\Expression;
 use Scar\Exception;
 
 /**

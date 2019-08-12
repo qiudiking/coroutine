@@ -11,6 +11,7 @@
 
 namespace Scar;
 
+use Scar\cache\CachePool;
 use Scar\cache\Driver;
 use Swoole\Coroutine;
 
@@ -67,6 +68,26 @@ class Cache
 
         return Coroutine::getContext()[self::$instance][$name];
     }
+
+	/**
+	 * 回收连接实例
+	 */
+	public static function recycle()
+	{
+
+		if(isset(Coroutine::getContext()[self::$instance]) === true ){
+			$arr  = Coroutine::getContext()[self::$instance];
+			foreach ($arr as $item){
+				if(  $item->handler() instanceof \Swoole\Coroutine\Redis ){
+					$CachePool = Container::getInstance()->get(CachePool::class);
+					if( $item->handler()->connected ){
+						$CachePool->put($item->handler()->host.$item->handler()->port,$item->handler());
+					}
+				}
+			}
+		}
+	}
+
 
     /**
      * 自动初始化缓存

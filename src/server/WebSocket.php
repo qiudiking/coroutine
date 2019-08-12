@@ -9,7 +9,9 @@
 namespace Scar\server;
 
 
+use Cake\Cache\Cache;
 use Scar\App;
+use Scar\cache\CachePool;
 use Scar\Config;
 use Scar\Container;
 use Scar\db\connector\Pool\MysqlPool;
@@ -105,6 +107,8 @@ class WebSocket
 	{
 		$mysqlPool = Container::getInstance()->get( MysqlPool::class );
 		$mysqlPool->destruct();
+		$cachePool = Container::getInstance()->get( CachePool::class );
+		$cachePool->destruct();
 		$class = App::$listenerSwoole . '\\WorkerExitEvent';
 		App::triggerEvent( $class,$server,$worker_id );
 	}
@@ -179,6 +183,9 @@ class WebSocket
 				$response->end( (string) $result );
 			}
 		}catch(\Throwable $t){
+			\SeasLog::info( print_r($t->getFile(),1) );
+			\SeasLog::info( $t->getFile() );
+			\SeasLog::info( $t->getLine() );
 			\SeasLog::error( $t->getMessage().PHP_EOL.$t->getTraceAsString() );
 			$result = print_r($t->getMessage().PHP_EOL.$t->getTraceAsString(),true);
 			if($psrResponse instanceof Response){

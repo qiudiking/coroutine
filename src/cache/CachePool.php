@@ -1,15 +1,13 @@
 <?php
+namespace Scar\cache;
 /**
  * Created by PhpStorm.
- * User: user
- * Date: 2019/7/8
- * Time: 10:10
+ * User: 秋狄
+ * Date: 2019/8/9
+ * Time: 11:10
  */
 
-namespace Scar\db\connector\Pool;
-
-
-class MysqlPool
+class CachePool
 {
 	protected $available = true;
 	protected $pool = [];
@@ -21,16 +19,15 @@ class MysqlPool
 		}
 	}
 
-	public function put( $key, $mysql)
+	public function put( $key, $redis)
 	{
 		if( $this->available ){
-			isset($this->pool[$key]) && $this->pool[$key]->push($mysql);
+			isset($this->pool[$key]) && $this->pool[$key]->push($redis);
 		}
 	}
 
-	/**
-	 * @return bool|mixed|\Swoole\Coroutine\MySQL
-	 */
+
+
 	public function get( $key )
 	{
 		//有空闲连接且连接池处于可用状态

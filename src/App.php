@@ -9,6 +9,7 @@
 namespace Scar;
 
 
+use Scar\cache\CachePool;
 use Scar\db\connector\Pool\MysqlPool;
 use Scar\server\WebSocket;
 use Swoole\Http\Request;
@@ -142,9 +143,10 @@ class App
 	{
 		date_default_timezone_set( 'Asia/Shanghai' );
 		Config::getConfigPath( $this->configPath );
+		$this->setLogPath();
 		(new Router())->run();
 		$this->mysqlPool();
-		$this->setLogPath();
+		$this->cachePool();
 	}
 
 	/**
@@ -180,6 +182,18 @@ class App
 		Container::getInstance()->set( $mysqlPool );
 	}
 
+	/**
+	 * 初始化cache连接池
+	 */
+	public function cachePool( )
+	{
+		$cacheConfig = Config::get('cache');
+		if( isset( $cacheConfig['type']) && strtolower($cacheConfig['type']) === 'redis' ){
+			$data[] = $cacheConfig['host'].$cacheConfig['port'];
+			$caceh = new CachePool($data);
+			Container::getInstance()->set( $caceh );
+		}
+	}
 
 	/**
 	 * 日志初始化
@@ -199,7 +213,10 @@ class App
 	public static function  onRequestInit( Request $request, Response $response )
 	{
 		self::triggerEvent( self::$listenerSwoole.'\\Request',$request,$response );
-		Db::recycle();
+		defer(function () {
+			Db::recycle();
+			Cache::recycle();
+		});
 	}
 
 	/**
