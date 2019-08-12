@@ -17,6 +17,7 @@ use Scar\db\connector\Pool\MysqlPool;
 use Scar\db\exception\BindParamException;
 use Scar\db\exception\DbException;
 use Scar\db\exception\MysqlException;
+use Scar\Debug;
 use Swoole\Coroutine;
 
 
@@ -359,7 +360,7 @@ abstract class Connection
 			Coroutine::getContext()[Db::$queryTimes]++:Coroutine::getContext()[Db::$queryTimes] = 1;
         try {
             // 调试开始
-            //$this->debug(true);
+            $this->debug(true);
 
             // 释放前次的查询结果
             if (!empty($this->Statement)) {
@@ -405,7 +406,7 @@ abstract class Connection
 
 
             // 调试结束
-            //$this->debug(false, '', $master);
+            $this->debug(false, '', $master);
             // 返回结果集
             return $this->getResult($pdo,$procedure);
         } catch (MysqlException $e) {
@@ -455,7 +456,7 @@ abstract class Connection
 	        :Coroutine::getContext()[Db::$executeTimes]=1;
         try {
             // 调试开始
-            //$this->debug(true);
+            $this->debug(true);
 
             //释放前次的查询结果
             if (!empty($this->Statement) ) {
@@ -493,6 +494,10 @@ abstract class Connection
 
 	            }
             }
+	        $this->debug(false, '', true);
+	        if ($query && !empty($this->config['deploy']) && !empty($this->config['read_master'])) {
+		        $query->readMaster();
+	        }
 	        $this->numRows =  $this->linkID->affected_rows;
             return $this->numRows;
         } catch (MysqlException $e) {
@@ -1041,9 +1046,9 @@ abstract class Connection
                 $master = '';
             }
 
-            //Log::record('[ SQL ] ' . $sql . ' [ ' . $master . 'RunTime:' . $runtime . 's ]', 'sql');
+	        \SeasLog::info('[ SQL ] ' . $sql . ' [ ' . $master . 'RunTime:' . $runtime . 's ]', 'sql');
             if (!empty($explain)) {
-                //Log::record('[ EXPLAIN : ' . var_export($explain, true) . ' ]', 'sql');
+                \SeasLog::info('[ EXPLAIN : ' . var_export($explain, true) . ' ]');
             }
         }
     }
