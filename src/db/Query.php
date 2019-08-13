@@ -97,7 +97,7 @@ class Query
             $where[$name] = $args[0];
             return $this->where($where)->value($args[1]);
         } else {
-            throw new Exception('method not exist:' . __CLASS__ . '->' . $method);
+            throw new \Exception('method not exist:' . __CLASS__ . '->' . $method);
         }
     }
 

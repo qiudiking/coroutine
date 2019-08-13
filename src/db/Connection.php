@@ -51,7 +51,13 @@ abstract class Connection
 	 * @var \Swoole\Coroutine\MySQL
 	 */
     protected $linkID;
+	/**
+	 * @var \Swoole\Coroutine\MySQL
+	 */
     protected $linkRead;
+	/**
+	 * @var \Swoole\Coroutine\MySQL
+	 */
     protected $linkWrite;
 
 
@@ -285,7 +291,6 @@ abstract class Connection
 				    );
 				    if( $connect_res === false ){
 					    throw new MysqlException( $mysql->connect_error,$mysql->connect_errno );
-
 				    }
 				    $this->links[$linkNum] = $mysql;
 				    if ($config['debug']) {
@@ -330,6 +335,19 @@ abstract class Connection
         } else {
             return $this->linkID;
         }
+    }
+
+	/**
+	 * 获取所有的连接
+	 * @return array|bool
+	 */
+    public function getLinks()
+    {
+	    if (!$this->links) {
+		    return false;
+	    } else {
+		    return $this->links;
+	    }
     }
 
 	/**

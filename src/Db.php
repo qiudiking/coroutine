@@ -123,11 +123,14 @@ class Db
 	    if(isset(Coroutine::getContext()[self::$instance])){
 	    	$arr = Coroutine::getContext()[self::$instance];
 	    	foreach ( $arr as $item ){
-			    $link = $item->getPdo();
-			    if( $link instanceof Coroutine\MySQL ){
-				    $mysqlPool = Container::getInstance()->get( MysqlPool::class );
-				    $key = $link->serverInfo['host'].$link->serverInfo['database'];
-				    if( $link->connected )$mysqlPool->put($key, $link );
+			    $links = $item->getLinks();
+			    if( $links == false ) return false;
+			    foreach ($links as $link){
+				    if( $link instanceof Coroutine\MySQL ){
+					    $mysqlPool = Container::getInstance()->get( MysqlPool::class );
+					    $key = $link->serverInfo['host'].$link->serverInfo['database'];
+					    if( $link->connected )$mysqlPool->put($key, $link );
+				    }
 			    }
 		    }
 	    }

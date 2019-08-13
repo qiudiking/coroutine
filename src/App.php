@@ -168,10 +168,9 @@ class App
 			foreach ( $hostname as $key => $item ){
 				$host = $item;
 				is_string($database) && $host = $host.$database;
-				if(is_array($database) && isset($database[$key])){
+				if(is_array($database) ){
+					if(isset($database[$key]) === false ) throw new \Exception('分布式数据库配置错误');
 					$host = $host.$database[$key];
-				}else{
-					throw new Exception('分布式数据库配置错误',32113);
 				}
 				$data[] = $host;
 			}
