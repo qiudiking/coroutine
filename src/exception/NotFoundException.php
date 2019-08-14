@@ -6,7 +6,7 @@
  * Time: 17:49
  */
 
-namespace Scar;
+namespace Scar\exception;
 
 
 use Psr\Container\NotFoundExceptionInterface;

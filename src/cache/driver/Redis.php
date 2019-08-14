@@ -97,7 +97,7 @@ class Redis extends Driver
         }
 
         try {
-            $result = 0 === strpos($value, 'Scar_serialize:') ? unserialize(substr($value, 16)) : $value;
+            $result = 0 === strpos($value, 'Scar_serialize:') ? unserialize(substr($value, 15)) : $value;
         } catch (\Exception $e) {
             $result = $default;
         }

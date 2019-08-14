@@ -6,7 +6,7 @@
  * Time: 17:47
  */
 
-namespace Scar;
+namespace Scar\exception;
 
 
 use Psr\Container\ContainerExceptionInterface;

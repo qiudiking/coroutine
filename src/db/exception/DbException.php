@@ -11,7 +11,9 @@
 
 namespace Scar\db\exception;
 
-use Scar\Exception;
+
+
+use Scar\exception\Exception;
 
 /**
  * Database相关异常处理类
