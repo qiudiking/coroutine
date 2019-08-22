@@ -12,13 +12,14 @@
 namespace Scar;
 
 use Scar\exception\ClassNotFoundException;
+use Swoole\Coroutine;
 
 class Loader
 {
     /**
      * @var array 实例数组
      */
-    protected static $instance = [];
+    protected static $instance = self::class.'instance';
 
     /**
      * @var array 类名映射
@@ -440,8 +441,8 @@ class Loader
     {
         $uid = $name . $layer;
 
-        if (isset(self::$instance[$uid])) {
-            return self::$instance[$uid];
+        if (isset(  Coroutine::getContext()[self::$instance][$uid])) {
+            return Coroutine::getContext()[self::$instance][$uid];
         }
 
         list($module, $class) = self::getModuleAndClass($name, $layer, $appendSuffix);
@@ -458,7 +459,7 @@ class Loader
             }
         }
 
-        return self::$instance[$uid] = $model;
+        return Coroutine::getContext()[self::$instance][$uid] = $model;
     }
 
     /**
@@ -509,8 +510,9 @@ class Loader
         }
 
         $uid = $name . $layer;
-        if (isset(self::$instance[$uid])) {
-            return self::$instance[$uid];
+
+        if (isset( Coroutine::getContext()[self::$instance][$uid])) {
+            return Coroutine::getContext()[self::$instance][$uid];
         }
 
         list($module, $class) = self::getModuleAndClass($name, $layer, $appendSuffix);
@@ -527,7 +529,7 @@ class Loader
             }
         }
 
-        return self::$instance[$uid] = $validate;
+        return Coroutine::getContext()[self::$instance][$uid] = $validate;
     }
 
     /**
@@ -650,7 +652,7 @@ class Loader
      */
     public static function clearInstance()
     {
-        self::$instance = [];
+        Coroutine::getContext()[self::$instance] = [];
     }
 }
 

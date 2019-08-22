@@ -1,13 +1,4 @@
 <?php
-// +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
-// +----------------------------------------------------------------------
-// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
-// +----------------------------------------------------------------------
-// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
-// +----------------------------------------------------------------------
-// | Author: 麦当苗儿 <zuojiazi@vip.qq.com> <http://zjzit.cn>
-// +----------------------------------------------------------------------
 
 namespace Scar;
 
@@ -36,11 +27,8 @@ class Error
      */
     public static function appException($e)
     {
-       echo "异常处理\n";
-       print_r($e->getMessage());
-       echo "\n";
-       print_r( $e->getTraceAsString() );
-	    echo "\n";
+       $message =  'errorCode:'.$e->getCode().PHP_EOL.(string) $e;;
+       self::saveLog( $message,SEASLOG_ERROR );
     }
 
 	/**
@@ -55,15 +43,28 @@ class Error
 	 */
     public static function appError($errno, $errstr, $errfile = '', $errline = 0)
     {
-    	echo "错误处理\n";
-		print_r( '错误编号: '.$errno );
-		echo "\n";
-	    print_r( '详细错误信息: '.$errstr );
-	    echo "\n";
-	    print_r( '出错的文件: '.$errfile );
-	    echo "\n";
-	    print_r( '出错行号: '.$errline );
-	    echo "\n";
+	    $message ='错误处理'. PHP_EOL.'错误类型: '.$errno;
+	    $message .= PHP_EOL.'详细错误信息: '.$errstr;
+	    $message .= PHP_EOL.'出错的文件: '.$errfile;
+	    $message .= PHP_EOL.'出错行号: '.$errline;
+	    self::saveLog( $message );
+    }
+
+	/**
+	 * 保存日志
+	 * @param        $message
+	 * @param string $level
+	 */
+    public static function saveLog( $message, $level = SEASLOG_WARNING  )
+    {
+	    if( extension_loaded('SeasLog') ){
+		    $logPath = Config::get('log.path');
+		    $logPath || $logPath = APP::$logPath;
+		    if( $logPath != \SeasLog::getBasePath() ){
+			    \SeasLog::setBasePath( $logPath );
+		    }
+		    \SeasLog::log( $level, $message );
+	    }
     }
 
     /**
@@ -75,8 +76,13 @@ class Error
     {
         // 将错误信息托管至 think\ErrorException
         if (!is_null($error = error_get_last()) && self::isFatal($error['type'])) {
+	        $message ='异常中止处理'. PHP_EOL.'错误类型: '.$error['type'];
+	        $message .= PHP_EOL.'详细错误信息: '.$error['message'];
+	        $message .= PHP_EOL.'出错的文件: '.$error['file'];
+	        $message .= PHP_EOL.'出错行号: '.$error['line'];
+	        self::saveLog( $message,SEASLOG_CRITICAL );
             self::appException(new \ErrorException(
-                $error['type'], $error['message'], $error['file'], $error['line']
+	            $error['message'],$error['type'], $error['line'],  $error['file']
             ));
         }
     }

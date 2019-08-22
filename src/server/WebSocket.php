@@ -116,16 +116,27 @@ class WebSocket
 
 	public function onTask( $server,  $task_id,  $src_worker_id,  $data)
 	{
-		$data = unserialize( $data );
-		if( isset($data['action']) ){
-		    $action = $data['action'];
-		    if( strpos($action,'::') ){
-		       list( $class,$method ) = explode('::',$action);
-		       if(strpos($class,'\\') !== 0 ) $class = App::$task.'\\'.$class;
-		       $instance = new $class($data, $server,$task_id,$src_worker_id );
-		       $instance->$method($data, $server,$task_id,$src_worker_id );
-		    }
+		try{
+
+			$data = unserialize( $data );
+			if( isset($data['action']) === false ) throw new \Exception( 'onTask params not Action',4001 );
+			$action = $data['action'];
+
+			if( strpos($action,'::') === false ) throw new \Exception( 'onTask Action ont :: tag',4002 );
+			list( $class,$method ) = explode('::',$action);
+
+			if(  !class_exists($class) ) throw new \Exception( "onTask ont $class class",4003 );
+			$instance = new $class($data, $server,$task_id,$src_worker_id );
+
+			if( !method_exists( $instance,$method ) ) throw new \Exception( "onTask $class ont $method method",4004);
+			$instance->$method($data, $server,$task_id,$src_worker_id );
+
+		}catch(Exception $e){
+
+			$result = 'errorCode:'.$e->getCode().PHP_EOL.(string) $e;
+			\SeasLog::error( $result );
 		}
+
 	}
 
 	public function onFinish( $server,  $task_id,  $data)
@@ -138,12 +149,12 @@ class WebSocket
 	{
 
 	}
-	public function onOpen( \swoole_websocket_server $server, \Swoole\WebSocket\Frame $frame )
+	public function onOpen( \swoole_http_request $request, \swoole_http_response $response )
 	{
 
 	}
 
-	public function onHandshake( \swoole_websocket_server $server, \Swoole\WebSocket\Frame $frame )
+	public function onHandshake( \swoole_http_request $request, \swoole_http_response $response )
 	{
 
 	}
@@ -183,11 +194,8 @@ class WebSocket
 				$response->end( (string) $result );
 			}
 		}catch(\Throwable $t){
-			\SeasLog::info( print_r($t->getFile(),1) );
-			\SeasLog::info( $t->getFile() );
-			\SeasLog::info( $t->getLine() );
-			\SeasLog::error( $t->getMessage().PHP_EOL.$t->getTraceAsString() );
-			$result = print_r($t->getMessage().PHP_EOL.$t->getTraceAsString(),true);
+			$result = 'errorCode:'.$t->getCode().PHP_EOL.(string) $t;
+			\SeasLog::error( $result );
 			if($psrResponse instanceof Response){
 				if($psrResponse->getStatusCode() === 200){
 					$psrResponse = $psrResponse->withStatus(500);
