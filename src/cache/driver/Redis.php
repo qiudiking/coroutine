@@ -41,7 +41,7 @@ class Redis extends Driver
 	    if (!empty($options)) {
 		    $this->options = array_merge($this->options, $options);
 	    }
-	    $CachePool = Container::getInstance()->get(CachePool::class);
+	    $CachePool = Container::getInstance()->getCachePool();
 	    $this->handler = $CachePool->get( $options['host'].$options['port'] );
 	    if( $this->handler === false ){
 		    $this->handler = new \Swoole\Coroutine\Redis();

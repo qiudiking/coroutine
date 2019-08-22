@@ -264,7 +264,7 @@ abstract class Connection
 		    } else {
 			    $config = array_merge($this->config, $config);
 		    }
-		    $mysqlPool = Container::getInstance()->get(MysqlPool::class);
+		    $mysqlPool = Container::getInstance()->getMysqlPool();
 		    if( Coroutine::getCid() === -1 ){
 				throw new MysqlException('当前不在协程环境中',-100);
 		    }

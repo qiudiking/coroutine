@@ -105,9 +105,9 @@ class WebSocket
 
 	public function onWorkerExit( $server,  $worker_id)
 	{
-		$mysqlPool = Container::getInstance()->get( MysqlPool::class );
+		$mysqlPool = Container::getInstance()->getMysqlPool();
 		$mysqlPool->destruct();
-		$cachePool = Container::getInstance()->get( CachePool::class );
+		$cachePool = Container::getInstance()->getCachePool();
 		$cachePool->destruct();
 		$class = App::$listenerSwoole . '\\WorkerExitEvent';
 		App::triggerEvent( $class,$server,$worker_id );
@@ -125,6 +125,7 @@ class WebSocket
 			if( strpos($action,'::') === false ) throw new \Exception( 'onTask Action ont :: tag',4002 );
 			list( $class,$method ) = explode('::',$action);
 
+			$class = App::$task.'\\'.$class;
 			if(  !class_exists($class) ) throw new \Exception( "onTask ont $class class",4003 );
 			$instance = new $class($data, $server,$task_id,$src_worker_id );
 
@@ -191,10 +192,12 @@ class WebSocket
 				$psrResponse = $psrResponse->withContent( (string) $result );
 				$psrResponse->send();
 			}else{
+				$response->header( 'Content-Type', 'text/html; charset=utf-8' );
 				$response->end( (string) $result );
 			}
 		}catch(\Throwable $t){
 			$result = 'errorCode:'.$t->getCode().PHP_EOL.(string) $t;
+			$response->header( 'Content-Type', 'text/html; charset=utf-8' );
 			\SeasLog::error( $result );
 			if($psrResponse instanceof Response){
 				if($psrResponse->getStatusCode() === 200){

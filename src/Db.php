@@ -127,7 +127,7 @@ class Db
 			    if( $links == false ) return false;
 			    foreach ($links as $link){
 				    if( $link instanceof Coroutine\MySQL ){
-					    $mysqlPool = Container::getInstance()->get( MysqlPool::class );
+					    $mysqlPool = Container::getInstance()->getMysqlPool();
 					    $key = $link->serverInfo['host'].$link->serverInfo['database'];
 					    if( $link->connected )$mysqlPool->put($key, $link );
 				    }

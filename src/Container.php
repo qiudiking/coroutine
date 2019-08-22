@@ -11,6 +11,9 @@ namespace Scar;
 
 
 use Psr\Container\ContainerInterface;
+use Scar\cache\CachePool;
+use Scar\db\connector\Pool\MysqlPool;
+use Scar\exception\NotFoundException;
 
 class Container implements ContainerInterface
 {
@@ -55,5 +58,29 @@ class Container implements ContainerInterface
 	{
 		$key = get_class( $instance );
 		self::$objectArr[$key] = $instance;
+	}
+
+	/**
+	 * @return MysqlPool
+	 */
+	public function getMysqlPool()
+	{
+		return $this->get(MysqlPool::class);
+	}
+
+	/**
+	 * @return CachePool
+	 */
+	public function getCachePool()
+	{
+		return $this->get( CachePool::class );
+	}
+
+	/**
+	 * @return \Swoole\WebSocket\Server
+	 */
+	public function getWebServer()
+	{
+		return $this->get( \Swoole\WebSocket\Server::class );
 	}
 }

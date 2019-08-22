@@ -79,7 +79,7 @@ class Cache
 			$arr  = Coroutine::getContext()[self::$instance];
 			foreach ($arr as $item){
 				if(  $item->handler() instanceof \Swoole\Coroutine\Redis ){
-					$CachePool = Container::getInstance()->get(CachePool::class);
+					$CachePool = Container::getInstance()->getCachePool();
 					if( $item->handler()->connected ){
 						$CachePool->put($item->handler()->host.$item->handler()->port,$item->handler());
 					}
