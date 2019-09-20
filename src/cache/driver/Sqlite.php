@@ -11,11 +11,11 @@ use Scar\cache\Driver;
 class Sqlite extends Driver
 {
     protected $options = [
-        'db'         => ':memory:',
-        'table'      => 'sharedmemory',
-        'prefix'     => '',
-        'expire'     => 0,
-        'persistent' => false,
+	    'db'             => ':memory:',
+	    'WebSocketTable' => 'sharedmemory',
+	    'prefix'         => '',
+	    'expire'         => 0,
+	    'persistent'     => false,
     ];
 
     /**
@@ -56,7 +56,7 @@ class Sqlite extends Driver
     public function has($name)
     {
         $name   = $this->getCacheKey($name);
-        $sql    = 'SELECT value FROM ' . $this->options['table'] . ' WHERE var=\'' . $name . '\' AND (expire=0 OR expire >' . $_SERVER['REQUEST_TIME'] . ') LIMIT 1';
+        $sql    = 'SELECT value FROM ' . $this->options['WebSocketTable'] . ' WHERE var=\'' . $name . '\' AND (expire=0 OR expire >' . $_SERVER['REQUEST_TIME'] . ') LIMIT 1';
         $result = sqlite_query($this->handler, $sql);
         return sqlite_num_rows($result);
     }
@@ -71,7 +71,7 @@ class Sqlite extends Driver
     public function get($name, $default = false)
     {
         $name   = $this->getCacheKey($name);
-        $sql    = 'SELECT value FROM ' . $this->options['table'] . ' WHERE var=\'' . $name . '\' AND (expire=0 OR expire >' . $_SERVER['REQUEST_TIME'] . ') LIMIT 1';
+        $sql    = 'SELECT value FROM ' . $this->options['WebSocketTable'] . ' WHERE var=\'' . $name . '\' AND (expire=0 OR expire >' . $_SERVER['REQUEST_TIME'] . ') LIMIT 1';
         $result = sqlite_query($this->handler, $sql);
         if (sqlite_num_rows($result)) {
             $content = sqlite_fetch_single($result);
@@ -114,7 +114,7 @@ class Sqlite extends Driver
         } else {
             $tag = '';
         }
-        $sql = 'REPLACE INTO ' . $this->options['table'] . ' (var, value, expire, tag) VALUES (\'' . $name . '\', \'' . $value . '\', \'' . $expire . '\', \'' . $tag . '\')';
+        $sql = 'REPLACE INTO ' . $this->options['WebSocketTable'] . ' (var, value, expire, tag) VALUES (\'' . $name . '\', \'' . $value . '\', \'' . $expire . '\', \'' . $tag . '\')';
         if (sqlite_query($this->handler, $sql)) {
             return true;
         }
@@ -164,7 +164,7 @@ class Sqlite extends Driver
     public function rm($name)
     {
         $name = $this->getCacheKey($name);
-        $sql  = 'DELETE FROM ' . $this->options['table'] . ' WHERE var=\'' . $name . '\'';
+        $sql  = 'DELETE FROM ' . $this->options['WebSocketTable'] . ' WHERE var=\'' . $name . '\'';
         sqlite_query($this->handler, $sql);
         return true;
     }
@@ -179,11 +179,11 @@ class Sqlite extends Driver
     {
         if ($tag) {
             $name = sqlite_escape_string($tag);
-            $sql  = 'DELETE FROM ' . $this->options['table'] . ' WHERE tag=\'' . $name . '\'';
+            $sql  = 'DELETE FROM ' . $this->options['WebSocketTable'] . ' WHERE tag=\'' . $name . '\'';
             sqlite_query($this->handler, $sql);
             return true;
         }
-        $sql = 'DELETE FROM ' . $this->options['table'];
+        $sql = 'DELETE FROM ' . $this->options['WebSocketTable'];
         sqlite_query($this->handler, $sql);
         return true;
     }

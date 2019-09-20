@@ -10,6 +10,8 @@ namespace Scar;
 
 
 use Scar\cache\CachePool;
+use Scar\cache\swoole\WebSocketTable;
+use Scar\cache\SwooleTable;
 use Scar\db\connector\Pool\MysqlPool;
 use Scar\server\WebSocket;
 use Swoole\Http\Request;
@@ -179,6 +181,15 @@ class App
 		}
 		$mysqlPool = new MysqlPool( $data );
 		Container::getInstance()->set( $mysqlPool );
+	}
+
+	/**
+	 * 加载swoole内存表
+	 * @throws \Exception
+	 */
+	public static function loadSwooleMemory()
+	{
+		WebSocketTable::instance();
 	}
 
 	/**

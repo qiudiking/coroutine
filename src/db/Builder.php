@@ -90,7 +90,7 @@ abstract class Builder
         }
 
         // 获取绑定信息
-        $bind = $this->query->getFieldsBind($options['table']);
+        $bind = $this->query->getFieldsBind($options['WebSocketTable']);
         if ('*' == $options['field']) {
             $fields = array_keys($bind);
         } else {
@@ -239,7 +239,7 @@ abstract class Builder
             // 附加软删除条件
             list($field, $condition) = $options['soft_delete'];
 
-            $binds    = $this->query->getFieldsBind($options['table']);
+            $binds    = $this->query->getFieldsBind($options['WebSocketTable']);
             $whereStr = $whereStr ? '( ' . $whereStr . ' ) AND ' : '';
             $whereStr = $whereStr . $this->parseWhereItem($field, $condition, '', $options, $binds);
         }
@@ -264,7 +264,7 @@ abstract class Builder
         }
 
         $whereStr = '';
-        $binds    = $this->query->getFieldsBind($options['table']);
+        $binds    = $this->query->getFieldsBind($options['WebSocketTable']);
         foreach ($where as $key => $val) {
             $str = [];
             foreach ($val as $field => $value) {
@@ -491,7 +491,7 @@ abstract class Builder
                 $table = $pos;
             }
         } else {
-            $table = $options['table'];
+            $table = $options['WebSocketTable'];
         }
         $type = $this->query->getTableInfo($table, 'type');
         if (isset($type[$key])) {
@@ -709,7 +709,7 @@ abstract class Builder
         $sql = str_replace(
             ['%TABLE%', '%DISTINCT%', '%FIELD%', '%JOIN%', '%WHERE%', '%GROUP%', '%HAVING%', '%ORDER%', '%LIMIT%', '%UNION%', '%LOCK%', '%COMMENT%', '%FORCE%'],
             [
-                $this->parseTable($options['table'], $options),
+                $this->parseTable($options['WebSocketTable'], $options),
                 $this->parseDistinct($options['distinct']),
                 $this->parseField($options['field'], $options),
                 $this->parseJoin($options['join'], $options),
@@ -748,7 +748,7 @@ abstract class Builder
             ['%INSERT%', '%TABLE%', '%FIELD%', '%DATA%', '%COMMENT%'],
             [
                 $replace ? 'REPLACE' : 'INSERT',
-                $this->parseTable($options['table'], $options),
+                $this->parseTable($options['WebSocketTable'], $options),
                 implode(' , ', $fields),
                 implode(' , ', $values),
                 $this->parseComment($options['comment']),
@@ -770,7 +770,7 @@ abstract class Builder
     {
         // 获取合法的字段
         if ('*' == $options['field']) {
-            $fields = array_keys($this->query->getFieldsType($options['table']));
+            $fields = array_keys($this->query->getFieldsType($options['WebSocketTable']));
         } else {
             $fields = $options['field'];
         }
@@ -810,7 +810,7 @@ abstract class Builder
             ['%INSERT%', '%TABLE%', '%FIELD%', '%DATA%', '%COMMENT%'],
             [
                 $replace ? 'REPLACE' : 'INSERT',
-                $this->parseTable($options['table'], $options),
+                $this->parseTable($options['WebSocketTable'], $options),
                 implode(' , ', $insertFields),
                 implode(' UNION ALL ', $values),
                 $this->parseComment($options['comment']),
@@ -845,7 +845,7 @@ abstract class Builder
      */
     public function update($data, $options)
     {
-        $table = $this->parseTable($options['table'], $options);
+        $table = $this->parseTable($options['WebSocketTable'], $options);
         $data  = $this->parseData($data, $options);
         if (empty($data)) {
             return '';
@@ -857,7 +857,7 @@ abstract class Builder
         $sql = str_replace(
             ['%TABLE%', '%SET%', '%JOIN%', '%WHERE%', '%ORDER%', '%LIMIT%', '%LOCK%', '%COMMENT%'],
             [
-                $this->parseTable($options['table'], $options),
+                $this->parseTable($options['WebSocketTable'], $options),
                 implode(',', $set),
                 $this->parseJoin($options['join'], $options),
                 $this->parseWhere($options['where'], $options),
@@ -881,7 +881,7 @@ abstract class Builder
         $sql = str_replace(
             ['%TABLE%', '%USING%', '%JOIN%', '%WHERE%', '%ORDER%', '%LIMIT%', '%LOCK%', '%COMMENT%'],
             [
-                $this->parseTable($options['table'], $options),
+                $this->parseTable($options['WebSocketTable'], $options),
                 !empty($options['using']) ? ' USING ' . $this->parseTable($options['using'], $options) . ' ' : '',
                 $this->parseJoin($options['join'], $options),
                 $this->parseWhere($options['where'], $options),

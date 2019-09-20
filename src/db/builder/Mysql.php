@@ -37,7 +37,7 @@ class Mysql extends Builder
     {
         // 获取合法的字段
         if ('*' == $options['field']) {
-            $fields = array_keys($this->query->getFieldsType($options['table']));
+            $fields = array_keys($this->query->getFieldsType($options['WebSocketTable']));
         } else {
             $fields = $options['field'];
         }
@@ -73,7 +73,7 @@ class Mysql extends Builder
             ['%INSERT%', '%TABLE%', '%FIELD%', '%DATA%', '%COMMENT%'],
             [
                 $replace ? 'REPLACE' : 'INSERT',
-                $this->parseTable($options['table'], $options),
+                $this->parseTable($options['WebSocketTable'], $options),
                 implode(' , ', $insertFields),
                 implode(' , ', $values),
                 $this->parseComment($options['comment']),

@@ -157,7 +157,7 @@ class Query
         if ($allTable) {
             $table = '*';
         } else {
-            $table = isset($this->options['table']) ? $this->options['table'] : $this->getTable();
+            $table = isset($this->options['WebSocketTable']) ? $this->options['WebSocketTable'] : $this->getTable();
         }
 	    Coroutine::getContext()[static::$readMaster][$table] = true;
 
@@ -425,8 +425,8 @@ class Query
         if (empty($this->options['fetch_sql']) && !empty($this->options['cache'])) {
             // 判断查询缓存
             $cache = $this->options['cache'];
-            if (empty($this->options['table'])) {
-                $this->options['table'] = $this->getTable();
+            if (empty($this->options['WebSocketTable'])) {
+                $this->options['WebSocketTable'] = $this->getTable();
             }
             $key    = is_string($cache['key']) ? $cache['key'] : md5($this->connection->getConfig('database') . '.' . $field . serialize($this->options) . serialize($this->bind));
             $result = Cache::get($key);
@@ -474,8 +474,8 @@ class Query
         if (empty($this->options['fetch_sql']) && !empty($this->options['cache'])) {
             // 判断查询缓存
             $cache = $this->options['cache'];
-            if (empty($this->options['table'])) {
-                $this->options['table'] = $this->getTable();
+            if (empty($this->options['WebSocketTable'])) {
+                $this->options['WebSocketTable'] = $this->getTable();
             }
             $guid   = is_string($cache['key']) ? $cache['key'] : md5($this->connection->getConfig('database') . '.' . $field . serialize($this->options) . serialize($this->bind));
             $result = Cache::get($guid);
@@ -812,11 +812,11 @@ class Query
         }
         if (true === $field) {
             // 获取全部字段
-            $fields = $this->getTableInfo($tableName ?: (isset($this->options['table']) ? $this->options['table'] : ''), 'fields');
+            $fields = $this->getTableInfo($tableName ?: (isset($this->options['WebSocketTable']) ? $this->options['WebSocketTable'] : ''), 'fields');
             $field  = $fields ?: ['*'];
         } elseif ($except) {
             // 字段排除
-            $fields = $this->getTableInfo($tableName ?: (isset($this->options['table']) ? $this->options['table'] : ''), 'fields');
+            $fields = $this->getTableInfo($tableName ?: (isset($this->options['WebSocketTable']) ? $this->options['WebSocketTable'] : ''), 'fields');
             $field  = $fields ? array_diff($fields, $field) : $field;
         }
         if ($tableName) {
@@ -989,7 +989,7 @@ class Query
      */
     public function partition($data, $field, $rule = [])
     {
-        $this->options['table'] = $this->getPartitionTableName($data, $field, $rule);
+        $this->options['WebSocketTable'] = $this->getPartitionTableName($data, $field, $rule);
         return $this;
     }
 
@@ -1504,7 +1504,7 @@ class Query
                 }
             }
         }
-        $this->options['table'] = $table;
+        $this->options['WebSocketTable'] = $table;
         return $this;
     }
 
@@ -1674,8 +1674,8 @@ class Query
                 $this->options['alias'][$table] = $val;
             }
         } else {
-            if (isset($this->options['table'])) {
-                $table = is_array($this->options['table']) ? key($this->options['table']) : $this->options['table'];
+            if (isset($this->options['WebSocketTable'])) {
+                $table = is_array($this->options['WebSocketTable']) ? key($this->options['WebSocketTable']) : $this->options['WebSocketTable'];
                 if (false !== strpos($table, '__')) {
                     $table = $this->parseSqlTable($table);
                 }
@@ -1929,7 +1929,7 @@ class Query
         if (!empty($this->pk)) {
             $pk = $this->pk;
         } else {
-            $pk = $this->getTableInfo(is_array($options) ? $options['table'] : $options, 'pk');
+            $pk = $this->getTableInfo(is_array($options) ? $options['WebSocketTable'] : $options, 'pk');
         }
         return $pk;
     }
@@ -1937,13 +1937,13 @@ class Query
     // 获取当前数据表字段信息
     public function getTableFields($table = '')
     {
-        return $this->getTableInfo($table ?: $this->getOptions('table'), 'fields');
+        return $this->getTableInfo($table ?: $this->getOptions( 'WebSocketTable' ), 'fields');
     }
 
     // 获取当前数据表字段类型
     public function getFieldsType($table = '')
     {
-        return $this->getTableInfo($table ?: $this->getOptions('table'), 'type');
+        return $this->getTableInfo($table ?: $this->getOptions( 'WebSocketTable' ), 'type');
     }
 
     // 获取当前数据表绑定信息
@@ -2183,7 +2183,7 @@ class Query
     {
         $pk = $this->getPk($options);
         // 获取当前数据表
-        $table = is_array($options['table']) ? key($options['table']) : $options['table'];
+        $table = is_array($options['WebSocketTable']) ? key($options['WebSocketTable']) : $options['WebSocketTable'];
         if (!empty($options['alias'][$table])) {
             $alias = $options['alias'][$table];
         }
@@ -2364,7 +2364,7 @@ class Query
             if (is_string($pk) && isset($data[$pk])) {
                 $where[$pk] = $data[$pk];
                 if (!isset($key)) {
-                    $key = 'Scar:' . $options['table'] . '|' . $data[$pk];
+                    $key = 'Scar:' . $options['WebSocketTable'] . '|' . $data[$pk];
                 }
                 unset($data[$pk]);
             } elseif (is_array($pk)) {
@@ -2579,7 +2579,7 @@ class Query
         $prefix = $this->connection->getConfig('database') . '.';
 
         if (isset($data)) {
-            return 'Scar:' . $prefix . (is_array($options['table']) ? key($options['table']) : $options['table']) . '|' . $data;
+            return 'Scar:' . $prefix . (is_array($options['WebSocketTable']) ? key($options['WebSocketTable']) : $options['WebSocketTable']) . '|' . $data;
         }
 
         try {
@@ -2622,7 +2622,7 @@ class Query
             // 判断查询缓存
             $cache = $options['cache'];
             if (true === $cache['key'] && !is_null($data) && !is_array($data)) {
-                $key = 'Scar:' . $this->connection->getConfig('database') . '.' . (is_array($options['table']) ? key($options['table']) : $options['table']) . '|' . $data;
+                $key = 'Scar:' . $this->connection->getConfig('database') . '.' . (is_array($options['WebSocketTable']) ? key($options['WebSocketTable']) : $options['WebSocketTable']) . '|' . $data;
             } elseif (is_string($cache['key'])) {
                 $key = $cache['key'];
             } elseif (!isset($key)) {
@@ -2708,7 +2708,7 @@ class Query
             $class = get_class($this->model);
             throw new ModelNotFoundException('model data Not Found:' . $class, $class, $options);
         } else {
-            $table = is_array($options['table']) ? key($options['table']) : $options['table'];
+            $table = is_array($options['WebSocketTable']) ? key($options['WebSocketTable']) : $options['WebSocketTable'];
             throw new DataNotFoundException('table data not Found:' . $table, $table, $options);
         }
     }
@@ -2754,8 +2754,8 @@ class Query
     public function chunk($count, $callback, $column = null, $order = 'asc')
     {
         $options = $this->getOptions();
-        if (empty($options['table'])) {
-            $options['table'] = $this->getTable();
+        if (empty($options['WebSocketTable'])) {
+            $options['WebSocketTable'] = $this->getTable();
         }
         $column = $column ?: $this->getPk($options);
 
@@ -2849,7 +2849,7 @@ class Query
         if (!is_null($data) && true !== $data) {
             if (!isset($key) && !is_array($data)) {
                 // 缓存标识
-                $key = 'Scar:' . $options['table'] . '|' . $data;
+                $key = 'Scar:' . $options['WebSocketTable'] . '|' . $data;
             }
             // AR模式分析主键条件
             $this->parsePkWhere($data, $options);
@@ -2901,8 +2901,8 @@ class Query
         $options = $this->options;
 
         // 获取数据表
-        if (empty($options['table'])) {
-            $options['table'] = $this->getTable();
+        if (empty($options['WebSocketTable'])) {
+            $options['WebSocketTable'] = $this->getTable();
         }
 
         if (!isset($options['where'])) {
@@ -2963,8 +2963,8 @@ class Query
             }
         }
 
-        if (isset(Coroutine::getContext()[static::$readMaster]['*']) || (is_string($options['table']) &&
-                                                              isset(Coroutine::getContext()[static::$readMaster][$options['table']]))) {
+        if (isset(Coroutine::getContext()[static::$readMaster]['*']) || ( is_string($options['WebSocketTable']) &&
+                                                                          isset(Coroutine::getContext()[static::$readMaster][$options['WebSocketTable']]))) {
             $options['master'] = true;
         }
 

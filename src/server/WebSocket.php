@@ -12,6 +12,8 @@ namespace Scar\server;
 use Cake\Cache\Cache;
 use Scar\App;
 use Scar\cache\CachePool;
+use Scar\cache\swoole\WebSocketTable;
+use Scar\cache\SwooleTable;
 use Scar\Config;
 use Scar\Container;
 use Scar\db\connector\Pool\MysqlPool;
@@ -24,7 +26,9 @@ use Scar\http\Response as PsrResponse;
 
 class WebSocket
 {
-
+	/**
+	 * @var \swoole_websocket_server
+	 */
 	protected $server = null;
 
 	protected  $callback = [
@@ -148,28 +152,154 @@ class WebSocket
 
 	public function onMessage( \swoole_websocket_server $server, \Swoole\WebSocket\Frame $frame )
 	{
+		$class = App::$listenerSwoole . '\\MessageEvent';
+		App::triggerEvent( $class,$server,$frame );
 
+		$uri = WebSocketTable::instance()->get($frame->fd,'uri');
+		$class = App::$webSocketController.$uri;
+
+		$instance = new $class;
+		if( method_exists($instance,'message') ){
+			$instance->message( $server, $frame );
+		}
 	}
-	public function onOpen( \swoole_http_request $request, \swoole_http_response $response )
+
+	/**
+	 * @param \swoole_websocket_server $server
+	 * @param \swoole_http_request     $request
+	 *
+	 * @throws \Exception
+	 */
+	public function onOpen( \swoole_websocket_server $server,  \swoole_http_request $request  )
 	{
+		$class = App::$listenerSwoole . '\\OpenEvent';
+		App::triggerEvent( $class,$server,$request );
 
+		$uri = WebSocketTable::instance()->get($request->fd,'uri');
+
+		$class = App::$webSocketController.$uri;
+
+		$instance = new $class;
+		if( method_exists($instance,'open') ){
+		    $instance->open( $server, $request );
+		}
 	}
 
+	/**
+	 * @param \swoole_http_request  $request
+	 * @param \swoole_http_response $response
+	 *
+	 * @return bool
+	 * @throws \Exception
+	 */
 	public function onHandshake( \swoole_http_request $request, \swoole_http_response $response )
 	{
+		$class = App::$listenerSwoole . '\\HandshakeEvent';
+		App::triggerEvent( $class,$request,$response );
 
+		$uri = $request->server['request_uri'];
+		if($uri === '/'){
+			$uri = '\Index';
+		}else{
+			$uri = str_replace("/","\\",$uri);
+		}
+		$class = App::$webSocketController.$uri;
+
+		if( class_exists($class) ){
+		    $instance = new $class;
+		    if(method_exists($instance,'handshake')){
+			    $res = $instance->handshake( $request, $response);
+			    if( $res === false ){
+				    $response->end();
+			        return false;
+			    }
+		    }
+		}else{
+			\SeasLog::warning($class.' not class ');
+			$response->end();
+			return false;
+		}
+		WebSocketTable::instance()->set( $request->fd,['uri'=>$uri] );
+
+		$this->server->defer(function ()use ($request){
+			$this->onOpen( $this->server, $request );
+		});
+
+		// websocket握手连接算法验证
+		$secWebSocketKey = $request->header['sec-websocket-key'];
+		$patten = '#^[+/0-9A-Za-z]{21}[AQgw]==$#';
+		if (0 === preg_match($patten, $secWebSocketKey) || 16 !== strlen(base64_decode($secWebSocketKey))) {
+			$response->end();
+			return false;
+		}
+		//echo $request->header['sec-websocket-key'];
+		$key = base64_encode(sha1(
+			$request->header['sec-websocket-key'] . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11',
+			true
+		));
+
+		$headers = [
+			'Upgrade' => 'websocket',
+			'Connection' => 'Upgrade',
+			'Sec-WebSocket-Accept' => $key,
+			'Sec-WebSocket-Version' => '13',
+		];
+
+		// WebSocket connection to 'ws://127.0.0.1:9502/'
+		// failed: Error during WebSocket handshake:
+		// Response must not include 'Sec-WebSocket-Protocol' header if not present in request: websocket
+		if (isset($request->header['sec-websocket-protocol'])) {
+			$headers['Sec-WebSocket-Protocol'] = $request->header['sec-websocket-protocol'];
+		}
+
+		foreach ($headers as $key => $val) {
+			$response->header($key, $val);
+		}
+
+		$response->status(101);
+		$response->end();
 	}
 
+	/**
+	 * @param \swoole_websocket_server $server
+	 * @param int                      $fd
+	 * @param int                      $reactorId
+	 */
 	public function onConnect( \swoole_websocket_server $server, int $fd, int $reactorId )
 	{
 		$class = App::$listenerSwoole . '\\ConnectEvent';
 		App::triggerEvent( $class,$server, $fd,  $reactorId );
 	}
 
+	/**
+	 * @param \swoole_websocket_server $server
+	 * @param int                      $fd
+	 * @param int                      $reactorId
+	 *
+	 * @throws \Exception
+	 */
 	public function onClose( \swoole_websocket_server $server,int $fd, int $reactorId )
 	{
 		$class = App::$listenerSwoole . '\\CloseEvent';
 		App::triggerEvent( $class,$server, $fd,  $reactorId );
+
+
+		$connection_info = $server->connection_info( $fd );
+		if( isset($connection_info['websocket_status']) ){
+
+			$uri = WebSocketTable::instance()->get( $fd,'uri' );
+			$webClass = App::$webSocketController.$uri;
+
+			if( class_exists( $webClass ) ){
+				$instance = new $webClass;
+
+				if( method_exists($instance,'close') ){
+					$instance->close( $server, $fd,$reactorId );
+				}
+			}
+			WebSocketTable::instance()->del( $fd );
+		}
+
 	}
 
 	/**
@@ -222,6 +352,9 @@ class WebSocket
 		$setData['pid_file'] = App::$webSocket_pid_file;
 		App::$daemonize && $setData['daemonize'] = 1;
 		$setData['reload_async'] = true;
+
+		App::loadSwooleMemory();
+
 	    $this->server = new  \swoole_websocket_server($config['http']['bind']['host'],$config['http']['bind']['port']);
 	    Container::getInstance()->set( $this->server );
 	    $this->server->set( $setData );
