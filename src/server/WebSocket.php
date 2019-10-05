@@ -118,11 +118,11 @@ class WebSocket
 	}
 
 
-	public function onTask( $server,  $task_id,  $src_worker_id,  $data)
+	public function onTask( $server,  $task)
 	{
 		try{
 
-			$data = unserialize( $data );
+			$data = unserialize( $task->data );
 			if( isset($data['action']) === false ) throw new \Exception( 'onTask params not Action',4001 );
 			$action = $data['action'];
 
@@ -131,10 +131,10 @@ class WebSocket
 
 			$class = App::$task.'\\'.$class;
 			if(  !class_exists($class) ) throw new \Exception( "onTask ont $class class",4003 );
-			$instance = new $class($data, $server,$task_id,$src_worker_id );
+			$instance = new $class($data, $server,$task );
 
 			if( !method_exists( $instance,$method ) ) throw new \Exception( "onTask $class ont $method method",4004);
-			$instance->$method($data, $server,$task_id,$src_worker_id );
+			$instance->$method($data, $server,$task );
 
 		}catch(Exception $e){
 
@@ -352,6 +352,7 @@ class WebSocket
 		$setData['pid_file'] = App::$webSocket_pid_file;
 		App::$daemonize && $setData['daemonize'] = 1;
 		$setData['reload_async'] = true;
+		$setData['task_enable_coroutine'] = true;
 
 		App::loadSwooleMemory();
 
