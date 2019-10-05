@@ -122,7 +122,7 @@ class WebSocket
 	{
 		try{
 
-			$data = unserialize( $task->data );
+			$data = unserialize( $data );
 			if( isset($data['action']) === false ) throw new \Exception( 'onTask params not Action',4001 );
 			$action = $data['action'];
 
@@ -131,10 +131,10 @@ class WebSocket
 
 			$class = App::$task.'\\'.$class;
 			if(  !class_exists($class) ) throw new \Exception( "onTask ont $class class",4003 );
-			$instance = new $class($data, $server,$task );
+			$instance = new $class($data, $server,$task_id,$src_worker_id );
 
 			if( !method_exists( $instance,$method ) ) throw new \Exception( "onTask $class ont $method method",4004);
-			$instance->$method($data, $server,$task );
+			$instance->$method($data, $server,$task_id,$src_worker_id );
 
 		}catch(Exception $e){
 
