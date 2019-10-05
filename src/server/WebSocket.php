@@ -122,7 +122,7 @@ class WebSocket
 	{
 		try{
 
-			$data = unserialize( $data );
+			$data = unserialize( $task->data );
 			if( isset($data['action']) === false ) throw new \Exception( 'onTask params not Action',4001 );
 			$action = $data['action'];
 
@@ -131,12 +131,12 @@ class WebSocket
 
 			$class = App::$task.'\\'.$class;
 			if(  !class_exists($class) ) throw new \Exception( "onTask ont $class class",4003 );
-			$instance = new $class($data, $server,$task_id,$src_worker_id );
+			$instance = new $class($data, $server,$task );
 
 			if( !method_exists( $instance,$method ) ) throw new \Exception( "onTask $class ont $method method",4004);
-			$instance->$method($data, $server,$task_id,$src_worker_id );
+			$instance->$method($data, $server,$task );
 
-		}catch(Exception $e){
+		}catch(\Exception $e){
 
 			$result = 'errorCode:'.$e->getCode().PHP_EOL.(string) $e;
 			\SeasLog::error( $result );
@@ -181,7 +181,7 @@ class WebSocket
 
 		$instance = new $class;
 		if( method_exists($instance,'open') ){
-		    $instance->open( $server, $request );
+			$instance->open( $server, $request );
 		}
 	}
 
@@ -206,14 +206,14 @@ class WebSocket
 		$class = App::$webSocketController.$uri;
 
 		if( class_exists($class) ){
-		    $instance = new $class;
-		    if(method_exists($instance,'handshake')){
-			    $res = $instance->handshake( $request, $response);
-			    if( $res === false ){
-				    $response->end();
-			        return false;
-			    }
-		    }
+			$instance = new $class;
+			if(method_exists($instance,'handshake')){
+				$res = $instance->handshake( $request, $response);
+				if( $res === false ){
+					$response->end();
+					return false;
+				}
+			}
 		}else{
 			\SeasLog::warning($class.' not class ');
 			$response->end();
@@ -346,8 +346,8 @@ class WebSocket
 
 
 	public function start()
-    {
-	    $config = Config::get('',App::$swoole);
+	{
+		$config = Config::get('',App::$swoole);
 		$setData = $config['http']['set'];
 		$setData['pid_file'] = App::$webSocket_pid_file;
 		App::$daemonize && $setData['daemonize'] = 1;
@@ -356,12 +356,12 @@ class WebSocket
 
 		App::loadSwooleMemory();
 
-	    $this->server = new  \swoole_websocket_server($config['http']['bind']['host'],$config['http']['bind']['port']);
-	    Container::getInstance()->set( $this->server );
-	    $this->server->set( $setData );
+		$this->server = new  \swoole_websocket_server($config['http']['bind']['host'],$config['http']['bind']['port']);
+		Container::getInstance()->set( $this->server );
+		$this->server->set( $setData );
 
-	    App::registerSwooleEvent( $this->server,$this->callback,$this->defaultEvents() );
-	    echo  "\033[01;40;32m启动成功\033[0m\n";
-	    $this->server->start();
-    }
+		App::registerSwooleEvent( $this->server,$this->callback,$this->defaultEvents() );
+		echo  "\033[01;40;32m启动成功\033[0m\n";
+		$this->server->start();
+	}
 }
