@@ -223,11 +223,9 @@ class App
 	public static function  onRequestInit( Request $request, Response $response )
 	{
 		self::triggerEvent( self::$listenerSwoole.'\\Request',$request,$response );
-		defer(function () {
-			Db::recycle();
-			Cache::recycle();
-		});
 	}
+
+
 
 	/**
 	 * 注册事件

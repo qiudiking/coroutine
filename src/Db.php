@@ -51,141 +51,143 @@ use Swoole\Coroutine;
  */
 class Db
 {
-    /**
-     * @var Connection[] 数据库连接实例
-     */
-    public static $instance = self::class.'instance';
+	/**
+	 * @var Connection[] 数据库连接实例
+	 */
+	public static $instance = self::class.'instance';
 
-    /**
-     * @var int 查询次数
-     */
-    public static $queryTimes = self::class.'queryTimes';
+	/**
+	 * @var int 查询次数
+	 */
+	public static $queryTimes = self::class.'queryTimes';
 
-    /**
-     * @var int 执行次数
-     */
-    public static $executeTimes = self::class.'executeTimes';
+	/**
+	 * @var int 执行次数
+	 */
+	public static $executeTimes = self::class.'executeTimes';
 
-    /**
-     * 数据库初始化，并取得数据库类实例
-     * @access public
-     * @param  mixed       $config 连接配置
-     * @param  bool|string $name   连接标识 true 强制重新连接
-     * @return Connection
-     * @throws Exception
-     */
-    public static function connect($config = [], $name = false)
-    {
-        if (false === $name) {
-            $name = md5(serialize($config));
-        }
-        if (true === $name || !isset( Coroutine::getContext()[self::$instance][$name]) ) {
-            // 解析连接参数 支持数组和字符串
-            $options = self::parseConfig($config);
 
-            if (empty($options['type'])) {
-                throw new \InvalidArgumentException('Undefined db type');
-            }
+	/**
+	 * 数据库初始化，并取得数据库类实例
+	 * @param array $config
+	 * @param bool  $name
+	 *
+	 * @return mixed
+	 */
+	public static function connect($config = [], $name = false)
+	{
+		if (false === $name) {
+			$name = md5(serialize($config));
+		}
+		if (true === $name || !isset( Coroutine::getContext()[self::$instance][$name]) ) {
+			// 解析连接参数 支持数组和字符串
+			$options = self::parseConfig($config);
 
-            $class = false !== strpos($options['type'], '\\') ?
-            $options['type'] :
-            '\\Scar\\db\\connector\\' . ucwords($options['type']);
+			if (empty($options['type'])) {
+				throw new \InvalidArgumentException('Undefined db type');
+			}
 
-            // 记录初始化信息
-           /* if (App::$debug) {
-                Log::record('[ DB ] INIT ' . $options['type'], 'info');
-            }*/
+			$class = false !== strpos($options['type'], '\\') ?
+				$options['type'] :
+				'\\Scar\\db\\connector\\' . ucwords($options['type']);
 
-            if (true === $name) {
-                $name = md5(serialize($config));
-            }
-            Coroutine::getContext()[self::$instance][$name] = new $class($options);
-        }
-        return Coroutine::getContext()[self::$instance][$name];
-    }
+			// 记录初始化信息
+			/* if (App::$debug) {
+				 Log::record('[ DB ] INIT ' . $options['type'], 'info');
+			 }*/
 
-    /**
-     * 清除连接实例
-     * @access public
-     * @return void
-     */
-    public static function clear()
-    {
+			if (true === $name) {
+				$name = md5(serialize($config));
+			}
+			Coroutine::getContext()[self::$instance][$name] = new $class($options);
+		}
+		return Coroutine::getContext()[self::$instance][$name];
+	}
 
-        unset(Coroutine::getContext()[self::$instance]);
-    }
+	/**
+	 * 清除连接实例
+	 * @access public
+	 * @return void
+	 */
+	public static function clear()
+	{
+
+		unset(Coroutine::getContext()[self::$instance]);
+	}
 
 	/**
 	 * 回收数据库连接
 	 */
-    public static function recycle()
-    {
-	    if(isset(Coroutine::getContext()[self::$instance])){
-	    	$arr = Coroutine::getContext()[self::$instance];
-	    	foreach ( $arr as $item ){
-			    $links = $item->getLinks();
-			    if( $links == false ) return false;
-			    foreach ($links as $link){
-				    if( $link instanceof Coroutine\MySQL ){
-					    $mysqlPool = Container::getInstance()->getMysqlPool();
-					    $key = $link->serverInfo['host'].$link->serverInfo['database'];
-					    if( $link->connected )$mysqlPool->put($key, $link );
-				    }
-			    }
-		    }
-	    }
-    }
+	public static function recycle()
+	{
+		defer(function (){
+			if(isset(Coroutine::getContext()[self::$instance])){
+				$arr = Coroutine::getContext()[self::$instance];
+				foreach ( $arr as $item ){
+					$links = $item->getLinks();
+					if( $links == false ) return false;
+					foreach ($links as $link){
+						if( $link instanceof Coroutine\MySQL ){
+							$mysqlPool = Container::getInstance()->getMysqlPool();
+							$key = $link->serverInfo['host'].$link->serverInfo['database'];
+							if( $link->connected )$mysqlPool->put($key, $link );
+						}
+					}
+				}
+			}
+		});
+	}
 
-    /**
-     * 数据库连接参数解析
-     * @access private
-     * @param  mixed $config 连接参数
-     * @return array
-     */
-    private static function parseConfig($config)
-    {
-        if (empty($config)) {
-            $config = Config::get(null,App::$databases);
-        } elseif (is_string($config) && false === strpos($config, '/')) {
-            $config = Config::get($config); // 支持读取配置参数
-        }
+	/**
+	 * 数据库连接参数解析
+	 * @access private
+	 * @param  mixed $config 连接参数
+	 * @return array
+	 */
+	private static function parseConfig($config)
+	{
+		if (empty($config)) {
+			$config = Config::get(null,App::$databases);
+		} elseif (is_string($config) && false === strpos($config, '/')) {
+			$config = Config::get($config); // 支持读取配置参数
+		}
 
-        return is_string($config) ? self::parseDsn($config) : $config;
-    }
+		return is_string($config) ? self::parseDsn($config) : $config;
+	}
 
-    /**
-     * DSN 解析
-     * 格式： mysql://username:passwd@localhost:3306/DbName?param1=val1&param2=val2#utf8
-     * @access private
-     * @param  string $dsnStr 数据库 DSN 字符串解析
-     * @return array
-     */
-    private static function parseDsn($dsnStr)
-    {
-        $info = parse_url($dsnStr);
+	/**
+	 * DSN 解析
+	 * 格式： mysql://username:passwd@localhost:3306/DbName?param1=val1&param2=val2#utf8
+	 * @access private
+	 * @param  string $dsnStr 数据库 DSN 字符串解析
+	 * @return array
+	 */
+	private static function parseDsn($dsnStr)
+	{
+		$info = parse_url($dsnStr);
 
-        if (!$info) {
-            return [];
-        }
+		if (!$info) {
+			return [];
+		}
 
-        $dsn = [
-            'type'     => $info['scheme'],
-            'username' => isset($info['user']) ? $info['user'] : '',
-            'password' => isset($info['pass']) ? $info['pass'] : '',
-            'hostname' => isset($info['host']) ? $info['host'] : '',
-            'hostport' => isset($info['port']) ? $info['port'] : '',
-            'database' => !empty($info['path']) ? ltrim($info['path'], '/') : '',
-            'charset'  => isset($info['fragment']) ? $info['fragment'] : 'utf8',
-        ];
+		$dsn = [
+			'type'     => $info['scheme'],
+			'username' => isset($info['user']) ? $info['user'] : '',
+			'password' => isset($info['pass']) ? $info['pass'] : '',
+			'hostname' => isset($info['host']) ? $info['host'] : '',
+			'hostport' => isset($info['port']) ? $info['port'] : '',
+			'database' => !empty($info['path']) ? ltrim($info['path'], '/') : '',
+			'charset'  => isset($info['fragment']) ? $info['fragment'] : 'utf8',
+		];
 
-        if (isset($info['query'])) {
-            parse_str($info['query'], $dsn['params']);
-        } else {
-            $dsn['params'] = [];
-        }
+		if (isset($info['query'])) {
+			parse_str($info['query'], $dsn['params']);
+		} else {
+			$dsn['params'] = [];
+		}
 
-        return $dsn;
-    }
+		return $dsn;
+	}
 
 	/**
 	 * 调用驱动类的方法
@@ -196,8 +198,8 @@ class Db
 	 * @return mixed
 	 * @throws \Scar\Exception
 	 */
-    public static function __callStatic($method, $params)
-    {
-        return call_user_func_array([self::connect(), $method], $params);
-    }
+	public static function __callStatic($method, $params)
+	{
+		return call_user_func_array([self::connect(), $method], $params);
+	}
 }
