@@ -12,7 +12,6 @@
 namespace Scar;
 
 use Scar\db\Connection;
-use Scar\db\connector\Pool\MysqlPool;
 use Scar\db\Query;
 use Swoole\Coroutine;
 
