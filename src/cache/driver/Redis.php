@@ -4,6 +4,7 @@
 namespace Scar\cache\driver;
 
 use Cake\Log\Log;
+use Scar\Cache;
 use Scar\cache\CachePool;
 use Scar\cache\Driver;
 use Scar\Container;
@@ -46,7 +47,7 @@ class Redis extends Driver
 		}
 		$CachePool = Container::getInstance()->getCachePool();
 		if( isset( Coroutine::getContext()[self::$defer] ) === false ){
-			self::recycle();
+			Cache::recycle();
 			Coroutine::getContext()[self::$defer] = true;
 		}
 		$this->handler = $CachePool->get( $options['host'].$options['port'] );
@@ -202,24 +203,6 @@ class Redis extends Driver
 	}
 
 
-	/**
-	 * 回收连接实例
-	 */
-	public static function recycle()
-	{
-		defer(function (){
-			if(isset(Coroutine::getContext()[self::$instance]) === true ){
-				$arr  = Coroutine::getContext()[self::$instance];
-				foreach ($arr as $item){
-					if(  $item->handler() instanceof \Swoole\Coroutine\Redis ){
-						$CachePool = Container::getInstance()->getCachePool();
-						if( $item->handler()->connected ){
-							$CachePool->put($item->handler()->host.$item->handler()->port,$item->handler());
-						}
-					}
-				}
-			}
-		});
-	}
+
 
 }
