@@ -174,6 +174,7 @@ class Config
 			$values || $values =  isset(self::$config[$range][$name[0]][$name[1]]) ?
 				self::$config[$range][$name[0]][$name[1]] :
 				null;
+			return $values;
 		}else{
 			return isset(self::$config[$range][$name[0]][$name[1]]) ?
 				self::$config[$range][$name[0]][$name[1]] :
